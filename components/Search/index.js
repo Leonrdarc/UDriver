@@ -53,7 +53,7 @@ export default class Search extends Component {
                 paddingLeft: 20,
                 paddingRight: 20,
                 marginTop: 0,
-                marginLeft: 0,
+                marginLeft: 57,
                 marginRight: 0,
                 elevation: 5,
                 shadowColor: '#000',
@@ -62,7 +62,8 @@ export default class Search extends Component {
                 shadowRadius: 15,
                 borderWidth: 1,
                 borderColor: "#DDD",
-                fontSize: 18
+                fontSize: 18,
+                borderRadius:10
             },
             listView:{
                 borderWidth: 1,
@@ -74,7 +75,8 @@ export default class Search extends Component {
                 shadowOpacity: 0.1,
                 shadowOffset: { x:0 , y:0 },
                 shadowRadius: 15,
-                marginTop: 10
+                marginTop: 10,
+                borderRadius:10,
             },
             description: {
                 fontSize:16
