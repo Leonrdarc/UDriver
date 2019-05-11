@@ -5,8 +5,29 @@ NOTA: Seleccionar React Native CLI y Android como target OS, luego seleccionar e
 
 Luego de las conifguraciones iniciales ejecutar en la carpeta del proyecto
 
-  npm install
+  >npm install
 
 Y para correr la app asegurarse de tener el emulador de Android abierto o un dispositivo en modo depuración conectado (solo uno a la vez):
  
-  react-native run-android
+  >react-native run-android
+  
+**Express**
+
+>npm install express --save
+
+**Mongoose**
+
+>npm install mongoose
+
+**Nodemon**
+
+>npm install -g nodemon
+
+**NPM**
+
+>npm install
+
+**Start API**
+
+>npm start
+
