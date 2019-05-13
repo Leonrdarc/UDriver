@@ -5,7 +5,6 @@
  * @format
  * @flow
  */
-
 import React, {Component} from 'react';
 import {StyleSheet, Text, View, PermissionsAndroid, Alert} from 'react-native';
 import { createDrawerNavigator, createAppContainer, createSwitchNavigator, createStackNavigator } from 'react-navigation';
