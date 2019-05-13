@@ -11,6 +11,10 @@ Y para correr la app asegurarse de tener el emulador de Android abierto o un dis
  
   >react-native run-android
   
+**Feathersjs**
+
+>npm install @feathersjs/feathers --save
+
 **Express**
 
 >npm install express --save
@@ -32,6 +36,10 @@ Y para correr la app asegurarse de tener el emulador de Android abierto o un dis
 **Nodemon**
 
 >npm install -g nodemon
+
+**SocketIO**
+
+>npm install --save socket.io
 
 **NPM**
 
