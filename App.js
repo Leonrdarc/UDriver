@@ -17,11 +17,7 @@ import DrawerNavigation from './navigation/DrawerNavigation'
 
 type Props = {};
 export default class App extends Component<Props> {
-  constructor(props){
-    super(props);
-
-    this.socket = SocketIOClient('http://localhost:3000');
-  }
+  
   render() {
     return (
       <AppContainer/>
