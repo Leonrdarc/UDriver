@@ -7,10 +7,11 @@
  */
 
 import React, {Component} from 'react';
-import {StyleSheet, Text, View, PermissionsAndroid, Alert} from 'react-native';
-import { createDrawerNavigator, createAppContainer, createSwitchNavigator, createStackNavigator } from 'react-navigation';
+import {StyleSheet, Text, View, PermissionsAndroid, Alert, PropTypes, TouchableOpacity} from 'react-native';
+import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import LoginScreen from './screens/LoginScreen';
-import Map from './components/Map';
+
+import DrawerNavigation from './navigation/DrawerNavigation'
 
 type Props = {};
 export default class App extends Component<Props> {
@@ -23,20 +24,9 @@ export default class App extends Component<Props> {
   }
 }
 
-const DrawerMaps = createDrawerNavigator({
-  Maps : {screen: Map}
-})
-
 const AppSwitchNavigator = createSwitchNavigator({
   Welcome:{screen: LoginScreen},
-  Maps: {screen: DrawerMaps}
+  Maps: {screen: DrawerNavigation}
 });
 
-
-
 const AppContainer = createAppContainer(AppSwitchNavigator);
-
-
-
-
-

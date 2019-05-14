@@ -1,11 +1,21 @@
 import React, { Component } from 'react';
-import { View, Text } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
+import {Icon} from 'native-base';
 import Map from '../components/Map';
+import MenuButton from '../components/MenuButton';
 
 export default class MapScreen extends Component {
+
+  _toggleDrawer = async () => {
+    this.props.navigation.toggleDrawer();
+  };
+
   render() {
     return (
-      <Map/>
+          <Map navigation={this.props.navigation}>
+            
+          </Map>
+      
     );
   }
 }

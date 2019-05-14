@@ -1,12 +1,11 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, PermissionsAndroid, TouchableOpacity} from 'react-native';
+import {StyleSheet, View, PermissionsAndroid} from 'react-native';
 import MapView from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 
-import {Icon} from 'native-base';
 import Search from '../Search';
 import Directions from '../Directions';
-
+import MenuButton from '../MenuButton';
 
 
 export default class Map extends Component{
@@ -63,33 +62,7 @@ export default class Map extends Component{
 
     return (
       <View style={styles.container}>
-      <View
-          style={{
-            position:'absolute',
-            height:54,width:54,
-            top:40,
-            left:20,
-            backgroundColor:'white',
-            zIndex:100,
-            alignItems:'center',
-            justifyContent: 'center',
-            elevation: 5,
-            shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowOffset: { x:0 , y:0 },
-            shadowRadius: 15,
-            borderWidth: 1,
-            borderColor: "#DDD",
-            borderRadius:10
-          }}
-        >
-          <TouchableOpacity
-            onPress={()=>this._toggleDrawer()}
-            style={{height:54, width:54, justifyContent:'center', alignItems:'center'}}
-          >
-            <Icon name="md-menu" style={{color:'black', fontSize: 30}}/>
-          </TouchableOpacity>
-      </View>
+      <MenuButton navigation={this.props.navigation}/>
       <MapView
         region={region}
         showsCompass={true}
