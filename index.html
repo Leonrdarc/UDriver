@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Intento de api</title>
+</head>
+
+<body>
+  <h1>Si la vida fuera estable todo el tiempo yo no beberia ni malgastaria la plata ....</h1>
+  <script src="/socket.io/socket.io.js"></script>
+  <form>
+    Latitud: <br>
+    <input type="text" id="lat" name="latitud"><br>
+    Longitud: <br>
+    <input type="text" name="longitud" id="long">
+  </form>
+  <button>Actualizar</button>
+
+  <script>
+    var button = document.querySelector('button');
+    var socket = io.connect('http://localhost:3000');
+    button.onclick = function () {
+      var datos = {
+        lat: document.getElementById("lat").value,
+        lon: document.getElementById("long").value
+      };
+      console.log(datos)
+      socket.emit('updateLocationDriver', datos);
+      
+    }
+  </script>
+  Si la vida fuera estable todo el tiempo,
+  Si la vida fuera estable todo el tiempo
+
+  Yo no bebería ni malgastaría la plata
+  pero me doy cuenta que la vida es un sueño
+  Yo no bebería ni malgastaría la plata
+  pero me doy cuenta que la vida es un sueño
+
+  Y antes de morir es mejor aprovecharla
+  por eso la plata que cae en mis manos
+  Y antes de morir es mejor aprovecharla
+  por eso la plata que cae en mis manos
+
+  La gasto en mujeres bebida y bailando
+  todo el mundo pelea si dejo una herencia
+  si guardo un tesoro o lo gozo yo
+  se apodera el diablo de aquella riqueza
+
+  Entonces no voy a la gloria de Dios
+  se acaba la vida de este cuerpo humano
+  Entonces no voy a la gloria de Dios
+  se acaba la vida de este cuerpo humano
+
+
+
+  Y lo que e guardado no se pa quien es
+  en el cementerio estoy vuelto gusano
+  Y lo que e guardado no se pa quien es
+  en el cementerio estoy vuelto gusano
+
+  Y allá están peliando lo que yo deje
+  por eso la plata que cae en mis manos
+  Y allá están peliando lo que yo deje
+  por eso la plata que cae en mis manos
+
+  La gasto en mujeres, bebida y bailando
+  todo el mundo pelea si dejo una herencia
+  si dejo un tesoro o lo gozo yo
+  se apodera el diablo de aquella riqueza
+
+  Entonces no voy a la gloria de Dios
+  Por eso la plata que cae en mis manos
+  Entonces no voy a la gloria de Dios
+  Por eso la plata que cae en mis manos
+
+  La gasto en mujeres bebida y bailando
+</body>
+
+</html>

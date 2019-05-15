@@ -16,16 +16,33 @@ const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 export default class Map extends Component{
-  state = {
-    region: null,
-    destination: null,
-    coordinate: new AnimatedRegion({
-      latitude: LATITUDE,
-      longitude: LONGITUDE,
-      latitudeDelta: 0,
-      longitudeDelta: 0,
-    }),
-  };
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      region: null,
+      destination: null,
+      messages: [],
+      userId: null,
+      lat: null,
+      long: null,
+      coordinate: new AnimatedRegion({
+	    latitude: LATITUDE,
+	    longitude: LONGITUDE,
+	    latitudeDelta: 0,
+	    longitudeDelta: 0,
+      }),
+    };
+
+    this.updateDriver = this.updateDriver.bind(this);
+
+    this.socket = SocketIOClient('http://localhost:3000');
+    this.socket.on('updateLocationDriver', this.updateDriver);
+  }
+
+  updateDriver(location){
+    this.setState({lat: location.lat, long: location.long })
+  }
 
   animate() {
     const { coordinate } = this.state;
@@ -148,6 +165,11 @@ export default class Map extends Component{
         </TouchableOpacity>
       </View>
       < Search onLocationSelected={this.handleLocationSelected}/>
+      <View style={{justifyContent: 'center', alignItems:'center', backgroundColor:'black'}}>
+          <Text style={{color:'white', fontSize:20}}>
+            {this.state.lat}/{this.state.long}
+          </Text>
+      </View>
     </View>
     );
   }

@@ -11,17 +11,35 @@ Y para correr la app asegurarse de tener el emulador de Android abierto o un dis
  
   >react-native run-android
   
+**Feathersjs**
+
+>npm install @feathersjs/feathers --save
+
 **Express**
 
 >npm install express --save
+
+>npm install express-handlebars
+
+**MongoDB**
+
+>npm install mongodb --save
 
 **Mongoose**
 
 >npm install mongoose
 
+**MessageBird**
+
+>npm install messagebird
+
 **Nodemon**
 
 >npm install -g nodemon
+
+**SocketIO**
+
+>npm install --save socket.io
 
 **NPM**
 
