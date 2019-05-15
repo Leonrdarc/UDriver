@@ -1,18 +1,49 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, PermissionsAndroid} from 'react-native';
-import MapView from 'react-native-maps';
+import {StyleSheet, View, PermissionsAndroid, TouchableOpacity, Dimensions, Text, Platform} from 'react-native';
+import MapView, {AnimatedRegion, Marker} from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 
 import Search from '../Search';
 import Directions from '../Directions';
 import MenuButton from '../MenuButton';
 
+const screen = Dimensions.get('window');
+
+const ASPECT_RATIO = screen.width / screen.height;
+const LATITUDE = 37.414978;
+const LONGITUDE = -122.058499;
+const LATITUDE_DELTA = 0.0922;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 
 export default class Map extends Component{
   state = {
     region: null,
     destination: null,
+    coordinate: new AnimatedRegion({
+      latitude: LATITUDE,
+      longitude: LONGITUDE,
+      latitudeDelta: 0,
+      longitudeDelta: 0,
+    }),
   };
+
+  animate() {
+    const { coordinate } = this.state;
+    const newCoordinate = {
+      latitude: 37.414292,
+      longitude: -122.089062,
+      latitudeDelta: 0,
+      longitudeDelta: 0,
+    };
+
+    if (Platform.OS === 'android') {
+      if (this.marker) {
+        this.marker._component.animateMarkerToCoordinate(newCoordinate, 500);
+      }
+    } else {
+      coordinate.timing(newCoordinate).start();
+    }
+  }
 
   async requestLocationPermission() {
     const granted = await PermissionsAndroid.request(
@@ -89,7 +120,33 @@ export default class Map extends Component{
             }}
           />
         )}
+        <Marker.Animated
+          ref={marker => { this.marker = marker; }}
+          coordinate={this.state.coordinate}
+        />
+        
       </MapView>
+      <View
+        style={{
+          ...StyleSheet.absoluteFillObject,
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+        }}
+      >
+        <TouchableOpacity
+            onPress={() => this.animate()}
+            style={{
+              backgroundColor: 'white',
+              paddingHorizontal: 18,
+              paddingVertical: 12,
+              borderRadius: 20, width: 80,
+              paddingHorizontal: 12,
+              alignItems: 'center',
+              marginHorizontal: 10,}}
+          >
+            <Text>Animate</Text>
+        </TouchableOpacity>
+      </View>
       < Search onLocationSelected={this.handleLocationSelected}/>
     </View>
     );
