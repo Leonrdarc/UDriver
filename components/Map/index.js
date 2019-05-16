@@ -27,11 +27,12 @@ export default class Map extends Component{
       lat: null,
       long: null,
       coordinate: new AnimatedRegion({
-	    latitude: LATITUDE,
-	    longitude: LONGITUDE,
-	    latitudeDelta: 0,
-	    longitudeDelta: 0,
+        latitude: LATITUDE,
+        longitude: LONGITUDE,
+        latitudeDelta: 0,
+        longitudeDelta: 0,
       }),
+      markers: [],
     };
 
     this.updateDriver = this.updateDriver.bind(this);
@@ -41,7 +42,25 @@ export default class Map extends Component{
   }
 
   updateDriver(location){
-    this.setState({lat: location.lat, long: location.long })
+    this.setState({
+      markers: [
+        ...this.state.markers,
+        ...this.generateMarkers(location),
+      ],
+    });
+  }
+
+  animateMarkers(fromCoordinate) {
+    const result = [];
+    const { latitude, longitude, dkey } = fromCoordinate;
+    if(this.state.markers.findIndex(x => x.id === dkey)===-1){
+
+    }
+    else{
+
+    }
+
+    return result;
   }
 
   animate() {
@@ -137,11 +156,15 @@ export default class Map extends Component{
             }}
           />
         )}
-        <Marker.Animated
-          ref={marker => { this.marker = marker; }}
-          coordinate={this.state.coordinate}
-        />
-        
+        {this.state.markers.map(marker => (
+            <Marker.Animated
+              title={marker.key}
+              image={flagPinkImg}
+              key={marker.key}
+              coordinate={marker.coordinate}
+              ref={marker => { this.marker = marker.key; }}
+            />
+          ))}
       </MapView>
       <View
         style={{

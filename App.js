@@ -11,16 +11,16 @@ import {StyleSheet, Text, View, PermissionsAndroid, Alert, PropTypes, TouchableO
 import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import LoginScreen from './screens/LoginScreen';
 import SocketIOClient from 'socket.io-client';
+import MassiveCustomMarkers from './components/Map/MassiveCustomMarkers';
 
-
-import DrawerNavigation from './navigation/DrawerNavigation'
+import DrawerNavigation from './navigation/DrawerNavigation';
 
 type Props = {};
 export default class App extends Component<Props> {
   
   render() {
     return (
-      <AppContainer/>
+      <MassiveCustomMarkers/>
       
       
     );
