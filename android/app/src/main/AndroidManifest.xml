@@ -25,6 +25,15 @@
       <meta-data
         android:name="com.google.android.geo.API_KEY"
         android:value="AIzaSyCBuuMR1PbJZG-F5DxmGc8AoieUkDASVQI"/>
+      <meta-data
+        android:name="com.facebook.sdk.ApplicationId"
+        android:value="@string/fb_app_id" />
+      <meta-data
+          android:name="com.facebook.accountkit.ApplicationName"
+          android:value="@string/app_name" />
+      <meta-data
+          android:name="com.facebook.accountkit.ClientToken"
+          android:value="@string/ak_client_token" />
     </application>
 
 </manifest>
