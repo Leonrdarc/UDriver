@@ -5,6 +5,7 @@ import {
   Text,
   Dimensions,
   TouchableOpacity,
+  Platform
 } from 'react-native';
 
 import MapView, { Marker, ProviderPropType } from 'react-native-maps';
@@ -31,15 +32,34 @@ export default class MassiveCustomMarkers extends React.Component {
         longitudeDelta: LONGITUDE_DELTA,
       },
       markers: [],
+      yolo: null,
     };
 
     this.onMapPress = this.onMapPress.bind(this);
   }
 
+  animate(marker) {
+    const { region } = this.state;
+    const newCoordinate = {
+      latitude: 37.414292,
+      longitude: -122.089062,
+      latitudeDelta: 0,
+      longitudeDelta: 0,
+    };
+
+    if (Platform.OS === 'android') {
+      if (this.marker) {
+        marker._component.animateMarkerToCoordinate(newCoordinate, 500);
+      }
+    } else {
+      region.timing(newCoordinate).start();
+    }
+  }
+
   generateMarkers(fromCoordinate) {
     const result = [];
     const { latitude, longitude } = fromCoordinate;
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 5; i++) {
       const newMarker = {
         coordinate: {
           latitude: latitude + 0.001 * i,
@@ -61,6 +81,16 @@ export default class MassiveCustomMarkers extends React.Component {
     });
   }
 
+  getProp(ob) {
+    for (var key in data.messages) {
+      var obj = data.messages[key];
+      // ...
+  }
+    return asd;
+  }
+
+  refsCollection = {};
+
   render() {
     return (
       <View style={styles.container}>
@@ -71,11 +101,12 @@ export default class MassiveCustomMarkers extends React.Component {
           onPress={this.onMapPress}
         >
           {this.state.markers.map(marker => (
-            <Marker
+            <Marker.Animated
               title={marker.key}
               image={flagPinkImg}
               key={marker.key}
               coordinate={marker.coordinate}
+              ref={(instance)=>{this.refsCollection[marker.key] = instance}}
             />
           ))}
         </MapView>
@@ -84,9 +115,23 @@ export default class MassiveCustomMarkers extends React.Component {
             onPress={() => this.setState({ markers: [] })}
             style={styles.bubble}
           >
-            <Text>Tap to create 100 markers</Text>
+            <Text>{this.state.markers.map(a => a.key)}</Text>
+            
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => this.refsCollection['foo1']._component.animateMarkerToCoordinate({
+              latitude: 37.414292,
+              longitude: -122.089062,
+              latitudeDelta: 0,
+              longitudeDelta: 0,
+            }, 500)}
+            style={styles.bubble}
+          >
+            <Text>{this.state.yolo}</Text>
+            
           </TouchableOpacity>
         </View>
+        
       </View>
     );
   }

@@ -15,22 +15,27 @@
     Latitud: <br>
     <input type="text" id="lat" name="latitud"><br>
     Longitud: <br>
-    <input type="text" name="longitud" id="long">
+    <input type="text" name="longitud" id="long"><br>
+    Key: <br>
+    <input type="text" name="keyd" id="key">
   </form>
   <button>Actualizar</button>
 
   <script>
     var button = document.querySelector('button');
     var socket = io.connect('http://localhost:3000');
+    console.log("Conectado!");
     button.onclick = function () {
       var datos = {
         lat: document.getElementById("lat").value,
-        lon: document.getElementById("long").value
+        lon: document.getElementById("long").value,
+        key: document.getElementById("key").value
       };
       console.log(datos)
-      socket.emit('updateLocationDriver', datos);
+      socket.emit('updatingLocationDriver', datos);
       
     }
+    
   </script>
   Si la vida fuera estable todo el tiempo,
   Si la vida fuera estable todo el tiempo

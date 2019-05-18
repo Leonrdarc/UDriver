@@ -13,9 +13,9 @@ io.on('connection', function (socket) {
         AddData(data);
     });
 
-    socket.on('updateLocationDriver', (data) => {
-
-        UpdateLocation('123',data)
+    socket.on('updatingLocationDriver', (data) => {
+        socket.broadcast.emit('updateLocationDriver', data)
+        console.log("updateDriver enviado")
     });
 });
 

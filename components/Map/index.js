@@ -2,10 +2,13 @@ import React, {Component} from 'react';
 import {StyleSheet, View, PermissionsAndroid, TouchableOpacity, Dimensions, Text, Platform} from 'react-native';
 import MapView, {AnimatedRegion, Marker} from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
+import io from 'socket.io-client';
 
 import Search from '../Search';
 import Directions from '../Directions';
 import MenuButton from '../MenuButton';
+
+import flagPinkImg from '../../assets/diomej.jpg';
 
 const screen = Dimensions.get('window');
 
@@ -24,61 +27,51 @@ export default class Map extends Component{
       destination: null,
       messages: [],
       userId: null,
-      lat: null,
-      long: null,
       coordinate: new AnimatedRegion({
         latitude: LATITUDE,
         longitude: LONGITUDE,
         latitudeDelta: 0,
         longitudeDelta: 0,
       }),
-      markers: [],
+      markers: [
+
+      ],
     };
 
     this.updateDriver = this.updateDriver.bind(this);
 
-    this.socket = SocketIOClient('http://localhost:3000');
+    this.socket = io('http://192.168.1.72:3000');
     this.socket.on('updateLocationDriver', this.updateDriver);
   }
 
   updateDriver(location){
-    this.setState({
-      markers: [
-        ...this.state.markers,
-        ...this.generateMarkers(location),
-      ],
-    });
-  }
-
-  animateMarkers(fromCoordinate) {
-    const result = [];
-    const { latitude, longitude, dkey } = fromCoordinate;
-    if(this.state.markers.findIndex(x => x.id === dkey)===-1){
-
+    let index = this.state.markers.findIndex(x => x.key === location.key);
+    if(index === -1){
+      this.setState({
+        markers: [
+          ...this.state.markers,
+          ...this.generateMarkers(location),
+        ],
+      });
     }
     else{
-
+      this._animateMarker(location);
     }
-
-    return result;
   }
 
-  animate() {
-    const { coordinate } = this.state;
-    const newCoordinate = {
-      latitude: 37.414292,
-      longitude: -122.089062,
-      latitudeDelta: 0,
-      longitudeDelta: 0,
-    };
+  
 
-    if (Platform.OS === 'android') {
-      if (this.marker) {
-        this.marker._component.animateMarkerToCoordinate(newCoordinate, 500);
-      }
-    } else {
-      coordinate.timing(newCoordinate).start();
+  generateMarkers(fromCoordinate) {
+    const result = [];
+    const newMarker = {
+      coordinate: {
+        latitude: parseFloat(fromCoordinate.lat),
+        longitude: parseFloat(fromCoordinate.lon),
+      },
+      key: fromCoordinate.key,
     }
+    result.push(newMarker);
+    return result;
   }
 
   async requestLocationPermission() {
@@ -124,6 +117,17 @@ export default class Map extends Component{
     this.props.navigation.toggleDrawer();
   };
 
+  _animateMarker = async (driver) => {
+    this.refsCollection[driver.key]._component.animateMarkerToCoordinate({
+      latitude: parseFloat(driver.lat),
+      longitude: parseFloat(driver.lon),
+      latitudeDelta: 0,
+      longitudeDelta: 0,
+    }, 300)
+  };
+
+  refsCollection = {};
+
   render() {
     let { region, destination } = this.state;
 
@@ -162,37 +166,12 @@ export default class Map extends Component{
               image={flagPinkImg}
               key={marker.key}
               coordinate={marker.coordinate}
-              ref={marker => { this.marker = marker.key; }}
+              ref={(instance)=>{this.refsCollection[marker.key] = instance;}}
             />
           ))}
       </MapView>
-      <View
-        style={{
-          ...StyleSheet.absoluteFillObject,
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-        }}
-      >
-        <TouchableOpacity
-            onPress={() => this.animate()}
-            style={{
-              backgroundColor: 'white',
-              paddingHorizontal: 18,
-              paddingVertical: 12,
-              borderRadius: 20, width: 80,
-              paddingHorizontal: 12,
-              alignItems: 'center',
-              marginHorizontal: 10,}}
-          >
-            <Text>Animate</Text>
-        </TouchableOpacity>
-      </View>
       < Search onLocationSelected={this.handleLocationSelected}/>
-      <View style={{justifyContent: 'center', alignItems:'center', backgroundColor:'black'}}>
-          <Text style={{color:'white', fontSize:20}}>
-            {this.state.lat}/{this.state.long}
-          </Text>
-      </View>
+      
     </View>
     );
   }
