@@ -12,7 +12,7 @@ import { createAppContainer, createSwitchNavigator } from 'react-navigation';
 import LoginScreen from './screens/LoginScreen';
 import SocketIOClient from 'socket.io-client';
 import MassiveCustomMarkers from './components/Map/MassiveCustomMarkers';
-import AccountKitSample from './components/AccounKitSample';
+import AccountKitnative from './components/AccountKitnative';
 
 import DrawerNavigation from './navigation/DrawerNavigation';
 
@@ -21,7 +21,7 @@ export default class App extends Component<Props> {
   
   render() {
     return (
-      <AccountKitSample/>
+      <AccountKitnative/>
       
       
     );

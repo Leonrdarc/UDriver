@@ -9,6 +9,7 @@
   "dependencies": {
     "@feathersjs/feathers": "^3.3.1",
     "body-parser": "^1.19.0",
+    "crypto": "^1.0.1",
     "express": "^4.16.4",
     "express-boom": "^3.0.0",
     "express-handlebars": "^3.0.2",
@@ -33,7 +34,8 @@
     "react-native-vector-icons": "^6.4.2",
     "react-navigation": "^3.9.1",
     "socket.io": "^2.2.0",
-    "socketio-jwt": "^4.5.0"
+    "socket.io-client": "^2.2.0",
+    "socketio-jwt-auth": "^0.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.4.4",

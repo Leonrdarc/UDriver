@@ -1,79 +1,89 @@
 import React, { Component } from 'react'
 import { StyleSheet, View, Button, Text } from 'react-native'
 import AccountKit from 'react-native-facebook-account-kit'
+import io from 'socket.io-client'
 
-const API_URL = 'http://localhost:3000'
+const API_URL = 'http://192.168.1.72:3000'
 
 export default class AccountKitnative extends Component {
+
+  
   state = {
     jwt: null,
     me: null,
-  }
 
+  }
+  
   componentWillMount() {
     AccountKit.configure({
-      initialPhoneCountryPrefix: '+54',
-      defaultCountry: 'AR',
+      responseType: 'code',
+      initialPhoneCountryPrefix: '+57',
+      defaultCountry: 'CO',
     })
     
   }
 
-  handleLoginButtonPress () {
-    AccountKit.loginWithEmail()
-      .then((token) => {
-        if (!token) {
-          alert('Login cancelled')
-        } else {
-          alert(`Logged with phone. Token: ${token}`)
-        }
-      })
-    // try {
-    //   const payload = await RNAccountKit.loginWithPhone()
+  handleLoginButtonPress = async () => {
+    // AccountKit.loginWithEmail()
+    //   .then((token) => {
+    //     if (!token) {
+    //       alert('Login cancelled')
+    //     } else {
+    //       alert(`Logged with phone. Token: ${token}`)
+    //     }
+    //   })
+    try {
+      const payload = await AccountKit.loginWithPhone()
 
-    //   if (!payload) {
-    //     return
-    //   }
+      if (!payload) {
+        return
+      }
 
-    //   const { code } = payload
-
-    //   await this.getJWT(code)
-    // } catch (err) {
-    //   alert('Error en autenticación con Facebook.')
-    // }
+      const { code } = payload 
+      await this.getJWT(code)
+    } catch (err) {
+      alert('Error en autenticación con Facebook.')
+    }
   }
 
   handleLogoutPress = () => this.setState({ jwt: null, me: null })
 
   getJWT = async code => {
-    const url = `${API_URL}/auth?code=${code}`
+    try {
+      const url = `${API_URL}/auth?code=${code}`
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-    if (!res.ok) {
-      alert('No se pudo obtener el JWT')
-      return
+      if (!res.ok) {
+        alert
+        alert('No se pudo obtener el JWT')
+        return
+      }
+
+      const { jwt, user } = await res.json()
+      this.setState({jwt: jwt, me: user.phone})
+    }catch(err){
+      alert('Error en obtener JWT.'+err)
     }
-
-    const { jwt } = await res.json()
-    this.setState({ jwt })
   }
 
   handleGetMePress = async () => {
-    var token = this.state.jwt;
-    var socket = io.connect('http://localhost:3000');
-    socket.on('connect', function (socket) {
-      socket
-        .on('authenticated', function () {
-          alert('Autenticado correctamente')
-        })
-        .emit('authenticate', {token: token}); //send the jwt
+    
+    var socket = io(API_URL, {query: 'auth_token='+this.state.jwt});
+    // Connection failed
+    socket.on('error', function(err) {
+      alert('No se pudo autenticar')
     });
-
+    // Connection succeeded
+    socket.on('success', function(data) {
+      alert(data.message)
+      alert(data.user.id)
+    })
     // const url = `${API_URL}/me`
     // const { jwt } = this.state
 
@@ -101,7 +111,6 @@ export default class AccountKitnative extends Component {
     const { jwt, me } = this.state
 
     const authenticated = !!jwt
-    const phone = !!me && me.phone
 
     return (
       <View style={styles.container}>
@@ -113,8 +122,8 @@ export default class AccountKitnative extends Component {
 
             <Text style={styles.jwt}>{jwt}</Text>
 
-            {phone && <Text style={styles.phone}>Teléfono: {phone.number}</Text>}
-
+            <Text style={styles.phone}>Teléfono:{me.number} </Text>
+              
             <Button title="Obtener Perfil" onPress={this.handleGetMePress} />
             <Button title="Salir" onPress={this.handleLogoutPress} />
           </View>
