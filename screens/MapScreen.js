@@ -6,13 +6,9 @@ import MenuButton from '../components/MenuButton';
 
 export default class MapScreen extends Component {
 
-  _toggleDrawer = async () => {
-    this.props.navigation.toggleDrawer();
-  };
-
   render() {
     return (
-          <Map navigation={this.props.navigation}>
+          <Map navigation={this.props.navigation} jwt={this.props.navigation.getParam('jwt')}>
             
           </Map>
       

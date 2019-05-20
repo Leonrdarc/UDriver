@@ -24,14 +24,6 @@ export default class AccountKitnative extends Component {
   }
 
   handleLoginButtonPress = async () => {
-    // AccountKit.loginWithEmail()
-    //   .then((token) => {
-    //     if (!token) {
-    //       alert('Login cancelled')
-    //     } else {
-    //       alert(`Logged with phone. Token: ${token}`)
-    //     }
-    //   })
     try {
       const payload = await AccountKit.loginWithPhone()
 
@@ -74,37 +66,17 @@ export default class AccountKitnative extends Component {
 
   handleGetMePress = async () => {
     
-    var socket = io(API_URL, {query: 'auth_token='+this.state.jwt});
+    this.socket = io(API_URL, {query: 'auth_token='+this.state.jwt});
     // Connection failed
-    socket.on('error', function(err) {
+    this.socket.on('error', function(err) {
       alert('No se pudo autenticar')
     });
     // Connection succeeded
-    socket.on('success', function(data) {
+    this.socket.on('success', function(data) {
       alert(data.message)
       alert(data.user.id)
     })
-    // const url = `${API_URL}/me`
-    // const { jwt } = this.state
-
-    // const res = await fetch(url, {
-    //   method: 'GET',
-    //   headers: {
-    //     Authorization: `Bearer ${jwt}`,
-    //     'Content-Type': 'application/json',
-    //   },
-    // })
-
-    // if (res.status === 403) {
-    //   alert('Usuario no autorizado')
-    //   return
-    // } else if (!res.ok) {
-    //   alert('No se pudo obtener el perfil')
-    //   return
-    // }
-
-    // const me = await res.json()
-    // this.setState({ me })
+    
   }
 
   render() {

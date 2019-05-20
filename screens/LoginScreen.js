@@ -3,11 +3,14 @@ import { createStackNavigator, createAppContainer } from 'react-navigation';
 import { View, Text, ImageBackground, StyleSheet, Image, TextInput, TouchableOpacity, Animated, Dimensions, Keyboard, AsyncStorage } from 'react-native';
 import { placeholder } from '@babel/types';
 import * as Animatable from 'react-native-animatable';
-import { Icon } from 'native-base';
+import AccountKit from 'react-native-facebook-account-kit'
+import io from 'socket.io-client'
+import { Overlay } from 'react-native-elements';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height
+const API_URL = 'http://192.168.1.72:3000'
 
-class LoginScreen extends Component {
+export default class LoginScreen extends Component {
 
   static navigationOptions = {
       header : null
@@ -17,171 +20,69 @@ class LoginScreen extends Component {
     super()
 
     this.state={
-      placeholderText: 'Ingresa tu numero de celular'
+      jwt: null,
+      loading: false,
     }
   }
 
-  componentWillMount(){
-    this.loginHeight = new Animated.Value(130)
-
-    this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow',
-    this.keyboardDidShow)
-
-    this.keyboardDidHideListener = Keyboard.addListener("keyboardDidHide",
-    this.keyboardDidHide)
-    
-    
-    this.forwardArrowOpacity = new Animated.Value(0)
-    this.borderBottomWidth = new Animated.Value(0)
-  }
-
-  keyboardDidShow = () =>{
-
-    Animated.parallel([
-      Animated.timing(this.forwardArrowOpacity,{
-        duration: 600,
-        toValue: 1
-      }),
-      Animated.timing(this.borderBottomWidth,{
-        duration: 600,
-        toValue: 1
-      }),
-      
-
-    ]).start()
-
-  }
-
-  keyboardDidHide = () => {
-
-    this.setState({placeholderText:'Ingresa tu numero de celular'})
-    Keyboard.dismiss()
-    Animated.parallel([
-      Animated.timing(this.forwardArrowOpacity,{
-        duration: 100,
-        toValue: 0
-      }),
-      Animated.timing(this.borderBottomWidth,{
-        duration: 100,
-        toValue: 0
-      }),
-      Animated.timing(this.loginHeight,{
-        toValue: 130,
-        duration: 500
-      })
-
-    ]).start(()=>this.decreaseHeightOfLogin)
-
-  }
-
-  increaseHeightOfLogin = () => {
-    this.setState({placeholderText:'312-3456789'})
-    Animated.timing(this.loginHeight,{
-      toValue:SCREEN_HEIGHT,
-      duration:500
-    }).start(()=>{
-      this.refs.textInputMobile.focus()
+  async componentWillMount(){
+    this.loginHeight = SCREEN_HEIGHT*0.35
+    AccountKit.configure({
+      responseType: 'code',
+      initialPhoneCountryPrefix: '+57',
+      defaultCountry: 'CO',
     })
   }
 
-  decreaseHeightOfLogin = () =>{
-    this.setState({placeholderText:'Ingresa tu numero de celular'})
-    Keyboard.dismiss()
-    Animated.timing(this.loginHeight,{
-      toValue: 130,
-      duration: 500
-    }).start()
+  handleLoginButtonPress = async () => {
+    this.setState({loading:true})
+    try {
+      const payload = await AccountKit.loginWithPhone()
+
+      if (!payload) {
+        return
+      }
+
+      const { code } = payload 
+      await this.getJWT(code)
+      await AsyncStorage.setItem('JWT', JSON.stringify(this.state.jwt));
+      this._goMapsAsync();
+    } catch (err) {
+      this.setState({loading: false})
+    }
+  }
+
+  getJWT = async code => {
+    try {
+      const url = `${API_URL}/auth?code=${code}`
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!res.ok) {
+        alert
+        alert('No se pudo obtener el JWT')
+        return
+      }
+
+      const { jwt, user } = await res.json()
+      this.setState({jwt: jwt})
+    }catch(err){
+      alert('No se ha podido autenticar')
+    }
   }
 
   _goMapsAsync = async () => {
-    this.props.navigation.navigate('Maps');
+    this.props.navigation.navigate('Mapa', {jwt: this.state.jwt});
   };
 
   render() {
-
-    const headerTextOpacity= this.loginHeight.interpolate({
-      inputRange:[130,SCREEN_HEIGHT],
-      outputRange:[1,0]
-    })
-
-    const headerMarginTop= this.loginHeight.interpolate({
-      inputRange:[130,SCREEN_HEIGHT],
-      outputRange:[30,100]
-    })
-
-    const headerBackOpacity= this.loginHeight.interpolate({
-      inputRange:[130,SCREEN_HEIGHT],
-      outputRange:[0,1]
-    })
-
-    const marginTop= this.loginHeight.interpolate({
-      inputRange:[130,SCREEN_HEIGHT],
-      outputRange:[20,100]
-    })
-
-    const titleTextLeft= this.loginHeight.interpolate({
-      inputRange:[130,SCREEN_HEIGHT],
-      outputRange:[100,25]
-    })
-
-    const titleTextBottom= this.loginHeight.interpolate({
-      inputRange:[130, 400, SCREEN_HEIGHT],
-      outputRange:[0,0,100]
-    })
-
-    const TitleTextOpacity= this.loginHeight.interpolate({
-      inputRange:[130,SCREEN_HEIGHT],
-      outputRange:[0,1]
-    })
-
-    const LogoOpacity= this.loginHeight.interpolate({
-      inputRange:[130,200,SCREEN_HEIGHT],
-      outputRange:[1,0,0]
-    })
-    
-
     return (
       <View style={{flex:1, backgroundColor:'black'}}>
-
-        <Animated.View
-          style={{
-            position:'absolute',
-            height:30,width:30,
-            top:60,
-            left:40,
-            zIndex:100,
-            opacity:headerBackOpacity
-          }}
-        >
-          <TouchableOpacity
-            onPress={()=>this.decreaseHeightOfLogin()}
-          >
-            <Icon name="md-arrow-back" style={{color:'white', fontSize: 30}}/>
-          </TouchableOpacity>
-        </Animated.View>
-        <Animated.View
-          style={{
-            position:'absolute',
-            height:40,width:40,
-            bottom:40,
-            right:20,
-            zIndex:100,
-            opacity: headerBackOpacity,
-            backgroundColor:'white',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: 30
-          }}
-        >  
-          <TouchableOpacity
-            onPress={()=>this._goMapsAsync()}
-          >
-            <Icon name="md-arrow-forward" style={{color:'black', fontSize: 30}}/>
-          </TouchableOpacity>
-            
-        </Animated.View>
-        
-
         <Animatable.View 
           animation="zoomIn" 
           iterationCount={1} 
@@ -189,102 +90,88 @@ class LoginScreen extends Component {
             flex:1,  
             alignItems:'center', flexDirection:'column',
             top: 90,
-            
           }}
         >
-          <Animated.View 
+          <View 
             style={{
               backgroundColor: 'transparent',height: 100,
-              width: 100, alignItems: 'center',opacity: LogoOpacity
+              width: 100, alignItems: 'center'
             }}
           >
             <Image source={require('../assets/logo.png')}
                     style={{width: "100%", height: "100%", flex:1}}/>
-          </Animated.View>
-          <Animated.Text 
+          </View>
+          <Text 
           style={{
-            justifyContent: 'center', color: 'white', fontWeight: 'bold', opacity: LogoOpacity, 
+            justifyContent: 'center', color: 'white', fontWeight: 'bold',
             fontSize: 30, paddingTop: 10
           }}>
               TransCocuelo
-          </Animated.Text>
+          </Text>
         </Animatable.View>
         {/** View de numero y redes sociales */}
         <Animatable.View animation="slideInUp" iterationCount={1}>
-          <Animated.View style={{height: this.loginHeight, backgroundColor: 'black',}}>
-            <Animated.View 
+          <View style={{height: 150, backgroundColor: 'black',}}>
+            <View 
               style={{
                 alignItems: 'flex-start', paddingHorizontal: 30, 
-                marginTop: headerMarginTop, opacity: headerTextOpacity
+                marginTop: 30
               }}
             >
               <Text style={{color:'white', fontSize: 20}}>
                 Iniciar Sesión
               </Text>
-            </Animated.View>
+            </View>
             <TouchableOpacity
-              onPress = {()=> this.increaseHeightOfLogin()}
+              onPress = {()=> this.handleLoginButtonPress()}
             >
-              <Animated.View 
+              <View 
                 style={{ 
-                  marginTop: marginTop, paddingHorizontal: 40, 
+                  marginTop: 20, paddingHorizontal: 40, 
                   flexDirection: 'row', alignItems:'center'
                 }}
               >
-                <Animated.Text
-                  style={{
-                    fontSize: 24, color:'white', fontWeight:'bold',
-                    position:'absolute',
-                    bottom: titleTextBottom,
-                    left: titleTextLeft,
-                    opacity: TitleTextOpacity
-                  }}
-                >
-                  Ingrese su numero celular
-                </Animated.Text>
                 <Image source={require('../assets/colombia-flag.png')} style={{height: 24, width: 24, resizeMode: 'contain'}}></Image>
-                <Animated.View 
+                <View 
                   pointerEvents="none" 
                   style={{
                     flexDirection: 'row', flex:1, marginHorizontal: 15, 
-                    borderBottomColor: 'white', borderBottomWidth: this.borderBottomWidth
+                    borderBottomColor: 'white', borderBottomWidth: 1
                   }}
                 >
                   <TextInput
                     keyboardType='numeric'
                     ref="textInputMobile" 
                     style={{flex:1, color:'white', fontSize: 13, height: 38}} 
-                    placeholder={this.state.placeholderText} 
+                    placeholder={'Ingresa tu numero de celular'} 
                     placeholderTextColor={'gray'} 
                     maxLength= {10}
                     underlineColorAndroid="transparent"
                     />
-                </Animated.View>
-              </Animated.View>
+                </View>
+              </View>
             </TouchableOpacity>
-          </Animated.View>
-          <View style={{ height: 250, backgroundColor:'black', alignItems:'center'}}>
+          </View>
+          <View style={{ height: this.loginHeight, backgroundColor:'black', alignItems:'center'}}>
             <Text style={{color:'white'}}>
               O conectate con una red social
             </Text>
-            
           </View>
         </Animatable.View>
+        <Overlay 
+          isVisible={this.state.loading} 
+          fullScreen
+          overlayStyle={{alignItems: 'center', justifyContent:'center'}}
+          containerStyle={{ alignItems:'center',justifyContent:'center', opacity:1}}
+          overlayBackgroundColor="rgba(255,255,255,0.4)"
+        >
+          <Text style={{fontSize:20}}>Cargando...</Text>
+          
+        </Overlay>
       </View>
     );
   }
 }
 
-export default LoginScreen;
-
-const styles = StyleSheet.create({
-    container:{
-      
-    },
-    cocuelo:{
-      
-    }
-    
-});
 
 
