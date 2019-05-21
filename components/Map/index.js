@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, PermissionsAndroid, TouchableOpacity, Dimensions, Text, Platform} from 'react-native';
+import {StyleSheet, View, PermissionsAndroid, TouchableOpacity, Dimensions, Text, Platform, Image} from 'react-native';
 import MapView, {AnimatedRegion, Marker} from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
 import io from 'socket.io-client';
@@ -10,7 +10,10 @@ import Search from '../Search';
 import Directions from '../Directions';
 import MenuButton from '../MenuButton';
 
-import flagPinkImg from '../../assets/diomej.jpg';
+import taxi from '../../assets/taxi.png';
+import originMark from '../../assets/location-pin.png'
+import flagMark from '../../assets/flag.png'
+
 
 const screen = Dimensions.get('window');
 const API_URL = 'http://192.168.1.72:3000'
@@ -21,6 +24,7 @@ const LATITUDE_DELTA = 0.0922;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
 const items = [
   //name key is must.It is to show the text in front
+  //Suerte, la necesitarás (?)
   { id: 1, name: 'Circunvalar-Universidades' },
   { id: 2, name: 'Miramar-Universidades' },
 ];
@@ -44,10 +48,10 @@ export default class Map extends Component{
       markers: [
 
       ],
-      routedrivers:[
+      routeDrivers:[
 
       ],
-      routeId:null,
+      routeSelected: null,
     };
 
     this.updateDriver = this.updateDriver.bind(this);
@@ -56,23 +60,27 @@ export default class Map extends Component{
   }
 
   updateDriver(location){
+    alert(this.state.routeSelected)
     let index = this.state.markers.findIndex(x => x.key === location.key);
-    let isInRoute = this.state.markers.findIndex(x => x.key === location.key);
-    if(index === -1){
-      let route = this.state.routeDrivers.findIndex(x => x.key === location.key);
+    if(!this.state.routeSelected){
+      if(index===-1){
       this.setState({
         markers: [
           ...this.state.markers,
           ...this.generateMarkers(location),
         ],
-      });
-    }
-    else{
+      })
+        this._animateMarker(location);
+    }else{
+      marker =this.state.markers
+      C = marker.filter(function(val) {
+        // return this.state.routeDrivers.indexOf(val.key) != -1;
+       });
+      this.setState({markers: C})
       this._animateMarker(location);
+      }
     }
-  }
-
-  
+  } 
 
   generateMarkers(fromCoordinate) {
     const result = [];
@@ -157,37 +165,70 @@ export default class Map extends Component{
 
   async handleSelectedRoute(item){
     const {id}= item;
-    this.socket.emit('getRouteInfo', id)
-    await this.socket.on('routeInfo', (data)=>{
+    if(id===1){
       this.setState({
         origin:{
-          latitude:data.start_latitude,
-          longitude:data.start_longitude
+          latitude:11.020221, 
+          longitude:-74.871427
         },
         destination:{
-          latitude:data.end_latitude,
-          longitude:data.end.logitude
-        }
+          latitude:10.923450, 
+          longitude:-74.799546
+        },
+        routeSelected: true,
+      });
+    }else{
+      this.setState({
+        origin:{
+          latitude:11.020221, 
+          longitude:-74.871427
+        },
+        destination:{
+          latitude:11.003087, 
+          longitude:-74.834960
+        },
+        routeSelected: true,
+      });
+    }
+    this.socket.emit('GetRouteDrivers', id)
+    await this.socket.on('RouteDrivers', (drivers)=>{
+      
+      C = this.state.markers.filter(function(val) {
+        return drivers.indexOf(val.key) != -1;
+      });
+      this.setState({
+        routeDrivers: drivers
       })
     })
-    this.setState({
-      destination: {
-        latitude,
-        longitude,
-        title: data.structured_formatting.main_text,
-      },
-    })
+    
   }
 
   refsCollection = {};
 
   render() {
-    let { destination, origin } = this.state;
-
+    const {destination, origin} = this.state;
     return (
       <View style={styles.container}>
       {/* <NavigationEvents onDidFocus={() => this._mountc()} /> */}
-      <MenuButton navigation={this.props.navigation}/>
+      <MenuButton style={{
+            position:'absolute',
+            height:54,width:54,
+            top:40,
+            left:20,
+            backgroundColor:'white',
+            zIndex:100,
+            alignItems:'center',
+            justifyContent: 'center',
+            elevation: 5,
+            shadowColor: '#000',
+            shadowOpacity: 0.1,
+            shadowOffset: { x:0 , y:0 },
+            shadowRadius: 15,
+            borderWidth: 1,
+            borderColor: "#DDD",
+            borderRadius:10
+            }}
+            navigation={this.props.navigation}/>
       <MapView
         initialRegion={this.state.region}
         showsCompass={true}
@@ -199,7 +240,7 @@ export default class Map extends Component{
         loadingEnabled
         ref={el => this.mapView = el}
       >
-        { destination && (
+        {destination && (
           <Directions 
             origin={origin}
             destination={destination}
@@ -214,20 +255,34 @@ export default class Map extends Component{
               });
             }}
           />
-        )}
+          
+        )
+        }
+        {destination && (<Marker  coordinate={this.state.origin} style={{alignItems: 'center',justifyContent:'center'}}><Image
+          source={originMark}
+          style={{height:40, width:40, resizeMode:'contain'}}/>
+          </Marker>)}
+        {destination &&(<Marker anchor={{x:0.42,y:0.8}} coordinate={this.state.destination}><Image
+          source={flagMark}
+          style={{height:40, width:80, resizeMode:'contain'}}/>
+          </Marker>)}
         {this.state.markers.map(marker => (
             <Marker.Animated
               title={marker.key}
-              image={flagPinkImg}
+              anchor={{x:0.5,y:0.5}}
               key={marker.key}
               coordinate={marker.coordinate}
               ref={(instance)=>{this.refsCollection[marker.key] = instance;}}
-            />
+            >
+              <Image
+              source={taxi}
+              style={{height:40, width:80, resizeMode:'contain'}}/>
+            </Marker.Animated>
         ))}
+
       </MapView>
       {/* < Search onLocationSelected={this.handleLocationSelected}/> */}
       <SearchableDropdown
-          onTextChange={text => console.log(text)}
           //On text change listner on the searchable input
           onItemSelect={item => this.handleSelectedRoute(item)}
           //onItemSelect called after the selection from the dropdown

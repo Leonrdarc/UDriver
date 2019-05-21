@@ -8,16 +8,21 @@ const jsonwebtoken = require('jsonwebtoken')
 const crypto = require('crypto');
 var socketIoJwtAuth = require('socketio-jwt-auth');
 const ClusterCon = "mongodb+srv://admin:contra12345@colectivos-hgrqm.mongodb.net/test?retryWrites=true";
+var MongoClient = require('mongodb').MongoClient;
+////mongodb+srv://admin:contra12345@colectivos-hgrqm.mongodb.net/test?retryWrites=true
+ //mongodb://localhost:27017
+const ConexionDB=MongoClient.connect(ClusterCon);
 app.use(boom());
 server.listen(3000);
 const loc = io.of('/Location');
+var retorno=-2;
+var vectorlimpio=[];
 //const socket = io('/Elnsp');
 //socket.join('some room');
 /**
  * Environment Variables:
- * In a real scenario get them using process.env
+ * In a real scenario get them using process.env    
  */
-
 const FACEBOOK_APP_ID = '2332001133742939'
 const FACEBOOK_APP_SECRET = '8385fb598e2b455b03bc3cef0d8eaf07'
 const JWT_SECRET = 'ABRACADABRA'
@@ -32,7 +37,6 @@ const FACEBOOK_ME_URL = 'https://graph.accountkit.com/v1.3/me'
 /**
  * Server Initialization
  */
-console.log(GetPeople('1234'));
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
@@ -44,22 +48,26 @@ app.post('/auth', async function (req, res) {
     try {
       //
       const authInfo = await getFacebookToken(req.query.code)
-
+        var userexist;
     //   let user = users.find({ id: authInfo.id }).value()
-        var userexist = GetPeople(authInfo.id);
-        
-       if (userexist==0) {
-        const { phone } = await getFacebookMe(authInfo['access_token'])
-        user = { id: authInfo.id, phone: phone }
-        AddUser(user);
-        // users.push(user).write()
-        //user.id
-       }
-      
-      const jwt = jsonwebtoken.sign({ sub: user.id }, JWT_SECRET)
-      console.log(user.id);
+        GetPeople(authInfo.id);
+        setTimeout( async function(){ 
+            userexist=retorno;
+            console.log("El contenido de la var userexist es : "+userexist)
+           if (userexist==0) {
+            const { phone } = await getFacebookMe(authInfo['access_token'])
+            user = { id: authInfo.id, phone: phone.number }
+            AddUser(user);
+            // users.push(user).write()
+            //user.id
+           }
+          
+          const jwt = jsonwebtoken.sign({ sub: authInfo.id }, JWT_SECRET)
+    
+          res.json({ jwt})
 
-      res.json({ jwt, user })
+        }, 2500);
+       
     } catch (err) {
       res.boom.unauthorized()
     }
@@ -84,18 +92,22 @@ io.on('connection', function(socket) {
         user: socket.request.user
     });
     socket.on('updatingLocationDriver', (data)=>{
-        UpdateLocation(data);        
+        // UpdateLocation(data);        
         socket.broadcast.emit('updateLocationDriver',data); 
     });
         
     socket.on('GetLocation', id =>{
-        var data = GetLocation(id);
-        socket.broadcast.emit('Location',data);
+        socket.broadcast.emit('Location',GetLocation(id));
     });
-
-    socket.on('GetLocation', id =>{
-        var data = GetLocation(id);
-        socket.broadcast.emit('Location',data);
+    
+    socket.on('GetRouteDrivers', async (id) =>{
+        //Aqui obtener los drivers de una route con el id (que es el de la ruta)
+        console.log(id);
+        GetAsgR(id.toString());
+        await setTimeout(function(){ 
+        console.log("Se mandó"+JSON.stringify(vectorlimpio));
+        socket.emit('RouteDrivers',vectorlimpio);
+    }, 4000);
     });
 });
 // io.on('connection', function (socket) {
@@ -169,13 +181,7 @@ function AddUser(data) { //Parametros de entrada
                  phone:data.phone,
               });
               console.log('Success !')
-              db.collection('People').count(function (err, count) {
-                  if (err) throw err;
-
-                  console.log('Total Rows: ' + count);
-                  client.close;
-                  return 1;
-              });
+              
           });
 
 
@@ -184,14 +190,14 @@ function AddUser(data) { //Parametros de entrada
 
 }
 
-function UpdateLocation(data){ //Parametros de entrada
+async function UpdateLocation(data){ //Parametros de entrada
   //Retorna 0 si hubo error de conexión
   //Retorna 1 si el procedimiento se realizó correctamente
   var MongoClient = require('mongodb').MongoClient;
   //DbConnection
   //mongodb://localhost:27017
   //mongodb+srv://admin:contra12345@colectivos-hgrqm.mongodb.net/test?retryWrites=true
-  console.log('Intentando actualizar ')
+  console.log('Intentando actualizar ');
   MongoClient.connect(ClusterCon, function (err, client) {
                       //Mongodb Cluster URL
       if(err)
@@ -224,7 +230,7 @@ function UpdateLocation(data){ //Parametros de entrada
   
 }
 
-function GetLocation(id){
+ function GetLocation(id){
   var MongoClient = require('mongodb').MongoClient;
   console.log('Intentando actualizar ')
   MongoClient.connect(ClusterCon, function (err, client) {
@@ -255,14 +261,35 @@ function GetLocation(id){
   }});
 }
 
-function GetPeople(id){
+async function getAThing() {
+    let db = await mongodb.MongoClient.connect('mongodb://server/mydatabase');
+    if (await db.authenticate("myuser", "mypassword")) {
+        let thing = await db.collection("Things").findOne({ name: "bob" });
+        await db.close();
+        return thing;
+    }
+}
+/*var Promise = require('bluebird');
+var MongoClient = Promise.promisifyAll(require('mongodb').MongoClient);
+
+var url = 'mongodb://localhost:27017/example';
+
+MongoClient.connectAsync(url).then(function (db) {
+    console.log(db);
+}).catch(function(err){
+    //handle error
+    console.log(err);
+}); */
+ function GetPeople(id){
     //-1 si hay error
     //1 si se encuentra
     // 0 si no se encontró
-      var MongoClient = require('mongodb').MongoClient;
-      console.log('Intentando encontrar ')
-      MongoClient.connect(ClusterCon, function (err, client) {
+   
+      //mongodb+srv://admin:contra12345@colectivos-hgrqm.mongodb.net/test?retryWrites=true
+       
+       MongoClient.connect(ClusterCon,  function (err, client) {
                           //Mongodb Cluster URL
+                          console.log("Esperó")
           if(err)
           {
               console.log("Connection Failed :C")
@@ -271,32 +298,39 @@ function GetPeople(id){
           }
           else
           {
-              var db= client.db('ColectivosDB'); //Base de datos objetivo
+              var db=  client.db('ColectivosDB'); //Base de datos objetivo
               //var ObjectID = require('mongodb').ObjectID; Search by ObjectID
               console.log("Connected to db"); 
               //StartQuerys
-              try {
-                db.collection('Person', function (err, collection) { //Insert
+                  db.collection('People').find({FBID: id}).count(function (err, count) {
+                    if (err) throw err;  
+                    console.log("Encontró algo ?: "+count);
+                    retorno=count;
+                    client.close;    
+                    
+                });  
+                /*
+                db.collection('People', function (err, collection) { //Insert
                     if(collection.find({FBID: id}) == null) {
+                        console.log("No se encontró"+id);
+                        console.log(collection);
                         return 0;
                       }
                       else{
-
+                        console.log("Se encontró"+id);
                         return 1;
+                        console.log(collection);
+                        
                       }
-                });
+                });*/
                 
-          } catch (e) {
-              console.log(e);
-           }
-                    
-                      
+                            
       }});
 }
 
 function GetRoute(id){
   var MongoClient = require('mongodb').MongoClient;
-  console.log('Intentando actualizar ')
+  console.log('Intentando actualizar')
   MongoClient.connect(ClusterCon, function (err, client) {
                       //Mongodb Cluster URL
       if(err)
@@ -326,8 +360,7 @@ function GetRoute(id){
 }
 
 function GetAsgR (id){
-  var MongoClient = require('mongodb').MongoClient;
-  console.log('Intentando actualizar ')
+  console.log('Buscando ruta')
   MongoClient.connect(ClusterCon, function (err, client) {
                       //Mongodb Cluster URL
       if(err)
@@ -342,16 +375,23 @@ function GetAsgR (id){
           //var ObjectID = require('mongodb').ObjectID; Search by ObjectID
           console.log("Connected to db"); 
           //StartQuerys
+          console.log("Buscando con el id: "+id);
           try {
-              dbo.collection("Routes").findOne({routeID: id}, function(err, result) {
-                  if (err) throw err;
-                  return result;
-                  db.close();
-                }); 
+            db.collection('Routes').find({routeID:id}, { projection: { routeID:0, _id:0} }).toArray(function(err, result) {
+                if (err) throw err;
+                console.log(result);
+                for (i = 0; i < result.length; i++) { 
+                    vectorlimpio[i]=result[i].FBID;
+                  }
+                console.log("Vector creado")
+                console.log(vectorlimpio);;
+              });
       } catch (e) {
           console.log(e);
        }
+      
                 
                   
   }});
+
 }

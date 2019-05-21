@@ -31,7 +31,8 @@ export default class LoginScreen extends Component {
       responseType: 'code',
       initialPhoneCountryPrefix: '+57',
       defaultCountry: 'CO',
-    })
+      
+  })
   }
 
   handleLoginButtonPress = async () => {
@@ -69,7 +70,7 @@ export default class LoginScreen extends Component {
         return
       }
 
-      const { jwt, user } = await res.json()
+      const { jwt } = await res.json()
       this.setState({jwt: jwt})
     }catch(err){
       alert('No se ha podido autenticar')
@@ -83,7 +84,7 @@ export default class LoginScreen extends Component {
 
   render() {
     return (
-      <View style={{flex:1, backgroundColor:'black'}}>
+      <View style={{flex:1, backgroundColor:'#2FABB2'}}>
         <Animatable.View 
           animation="zoomIn" 
           iterationCount={1} 
@@ -99,20 +100,14 @@ export default class LoginScreen extends Component {
               width: 100, alignItems: 'center'
             }}
           >
-            <Image source={require('../assets/logo.png')}
-                    style={{width: "100%", height: "100%", flex:1}}/>
+            <Image source={require('../assets/udriver_logo21.png')}
+                    style={{width: 170, height: 170, resizeMode:'contain'}}/>
           </View>
-          <Text 
-          style={{
-            justifyContent: 'center', color: 'white', fontWeight: 'bold',
-            fontSize: 30, paddingTop: 10
-          }}>
-              TransCocuelo
-          </Text>
+          
         </Animatable.View>
         {/** View de numero y redes sociales */}
         <Animatable.View animation="slideInUp" iterationCount={1}>
-          <View style={{height: 150, backgroundColor: 'black',}}>
+          <View style={{height: 150, backgroundColor: '#2FABB2',}}>
             <View 
               style={{
                 alignItems: 'flex-start', paddingHorizontal: 30, 
@@ -143,9 +138,9 @@ export default class LoginScreen extends Component {
                   <TextInput
                     keyboardType='numeric'
                     ref="textInputMobile" 
-                    style={{flex:1, color:'white', fontSize: 13, height: 38}} 
+                    style={{flex:1, color:'#2FABB2', fontSize: 13, height: 38}} 
                     placeholder={'Ingresa tu numero de celular'} 
-                    placeholderTextColor={'gray'} 
+                    placeholderTextColor={'#C6D1D2'} 
                     maxLength= {10}
                     underlineColorAndroid="transparent"
                     />
@@ -153,7 +148,7 @@ export default class LoginScreen extends Component {
               </View>
             </TouchableOpacity>
           </View>
-          <View style={{ height: this.loginHeight, backgroundColor:'black', alignItems:'center'}}>
+          <View style={{ height: this.loginHeight, backgroundColor:'#00ADB4', alignItems:'center'}}>
             <Text style={{color:'white'}}>
               O conectate con una red social
             </Text>
