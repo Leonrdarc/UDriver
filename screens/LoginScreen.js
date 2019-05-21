@@ -73,6 +73,7 @@ export default class LoginScreen extends Component {
       this.setState({jwt: jwt})
     }catch(err){
       alert('No se ha podido autenticar')
+      throw err;
     }
   }
 

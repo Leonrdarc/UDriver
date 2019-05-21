@@ -31,6 +31,7 @@ export default class Map extends Component{
     super(props);
     this.state = {
       region: null,
+      origin:null,
       destination: null,
       messages: [],
       userId: null,
@@ -46,7 +47,7 @@ export default class Map extends Component{
       routedrivers:[
 
       ],
-      routeSelected:false
+      routeId:null,
     };
 
     this.updateDriver = this.updateDriver.bind(this);
@@ -56,6 +57,7 @@ export default class Map extends Component{
 
   updateDriver(location){
     let index = this.state.markers.findIndex(x => x.key === location.key);
+    let isInRoute = this.state.markers.findIndex(x => x.key === location.key);
     if(index === -1){
       let route = this.state.routeDrivers.findIndex(x => x.key === location.key);
       this.setState({
@@ -129,16 +131,16 @@ export default class Map extends Component{
     this.socket.close();
   }
   
-  handleLocationSelected = (data, {geometry}) => {
-    const {location: {lat: latitude, lng:longitude} }=geometry;
-    this.setState({
-      destination: {
-        latitude,
-        longitude,
-        title: data.structured_formatting.main_text,
-      },
-    })
-  }
+  // handleLocationSelected = (data, {geometry}) => {
+  //   const {location: {lat: latitude, lng:longitude} }=geometry;
+  //   this.setState({
+  //     destination: {
+  //       latitude,
+  //       longitude,
+  //       title: data.structured_formatting.main_text,
+  //     },
+  //   })
+  // }
 
   _toggleDrawer = async () => {
     this.props.navigation.toggleDrawer();
@@ -153,10 +155,34 @@ export default class Map extends Component{
     }, 300)
   };
 
+  async handleSelectedRoute(item){
+    const {id}= item;
+    this.socket.emit('getRouteInfo', id)
+    await this.socket.on('routeInfo', (data)=>{
+      this.setState({
+        origin:{
+          latitude:data.start_latitude,
+          longitude:data.start_longitude
+        },
+        destination:{
+          latitude:data.end_latitude,
+          longitude:data.end.logitude
+        }
+      })
+    })
+    this.setState({
+      destination: {
+        latitude,
+        longitude,
+        title: data.structured_formatting.main_text,
+      },
+    })
+  }
+
   refsCollection = {};
 
   render() {
-    let { destination } = this.state;
+    let { destination, origin } = this.state;
 
     return (
       <View style={styles.container}>
@@ -175,7 +201,7 @@ export default class Map extends Component{
       >
         { destination && (
           <Directions 
-            origin={region}
+            origin={origin}
             destination={destination}
             onReady={result =>{
               this.mapView.fitToCoordinates(result.coordinates,{
@@ -197,13 +223,13 @@ export default class Map extends Component{
               coordinate={marker.coordinate}
               ref={(instance)=>{this.refsCollection[marker.key] = instance;}}
             />
-          ))}
+        ))}
       </MapView>
       {/* < Search onLocationSelected={this.handleLocationSelected}/> */}
       <SearchableDropdown
           onTextChange={text => console.log(text)}
           //On text change listner on the searchable input
-          // onItemSelect={item => alert(JSON.stringify(item))}
+          onItemSelect={item => this.handleSelectedRoute(item)}
           //onItemSelect called after the selection from the dropdown
           containerStyle={{ padding: 5 }}
           //suggestion container style

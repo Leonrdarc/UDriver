@@ -7,7 +7,7 @@ const fetch = require('node-fetch')
 const jsonwebtoken = require('jsonwebtoken')
 const crypto = require('crypto');
 var socketIoJwtAuth = require('socketio-jwt-auth');
-var ClusterCon = "mongodb+srv://admin:contra12345@colectivos-hgrqm.mongodb.net/test?retryWrites=true";
+const ClusterCon = "mongodb+srv://admin:contra12345@colectivos-hgrqm.mongodb.net/test?retryWrites=true";
 app.use(boom());
 server.listen(3000);
 const loc = io.of('/Location');
@@ -32,7 +32,7 @@ const FACEBOOK_ME_URL = 'https://graph.accountkit.com/v1.3/me'
 /**
  * Server Initialization
  */
-
+console.log(GetPeople('1234'));
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
 });
@@ -46,12 +46,15 @@ app.post('/auth', async function (req, res) {
       const authInfo = await getFacebookToken(req.query.code)
 
     //   let user = users.find({ id: authInfo.id }).value()
-
-    //   if (!user) {
+        var userexist = GetPeople(authInfo.id);
+        
+       if (userexist==0) {
         const { phone } = await getFacebookMe(authInfo['access_token'])
-        user = { id: authInfo.id, phone }
+        user = { id: authInfo.id, phone: phone }
+        AddUser(user);
         // users.push(user).write()
-    //   }
+        //user.id
+       }
       
       const jwt = jsonwebtoken.sign({ sub: user.id }, JWT_SECRET)
       console.log(user.id);
@@ -80,8 +83,20 @@ io.on('connection', function(socket) {
         message: 'success logged in!',
         user: socket.request.user
     });
+    socket.on('updatingLocationDriver', (data)=>{
+        UpdateLocation(data);        
+        socket.broadcast.emit('updateLocationDriver',data); 
+    });
+        
+    socket.on('GetLocation', id =>{
+        var data = GetLocation(id);
+        socket.broadcast.emit('Location',data);
+    });
 
-    
+    socket.on('GetLocation', id =>{
+        var data = GetLocation(id);
+        socket.broadcast.emit('Location',data);
+    });
 });
 // io.on('connection', function (socket) {
 //     socket.on('AddData', (data) => {
@@ -145,20 +160,16 @@ function AddUser(data) { //Parametros de entrada
           var db = client.db('ColectivosDB'); //Base de datos objetivo
 
           console.log("Connected to db");
+          console.log("Intentando crear");
 
           //StartQuerys
-          db.collection('users', function (err, collection) { //Insert
+          db.collection('People', function (err, collection) { //Insert
               collection.insert({
                  FBID:data.id,
-                 name:data.name,
-                 lastname:data.lastname,
-                 birthday:data.birthday,
                  phone:data.phone,
-                 country_code:data.cc,
-                 isDriver:data.isdriver
               });
               console.log('Success !')
-              db.collection('users').count(function (err, count) {
+              db.collection('People').count(function (err, count) {
                   if (err) throw err;
 
                   console.log('Total Rows: ' + count);
@@ -176,7 +187,6 @@ function AddUser(data) { //Parametros de entrada
 function UpdateLocation(data){ //Parametros de entrada
   //Retorna 0 si hubo error de conexión
   //Retorna 1 si el procedimiento se realizó correctamente
-  //Retorna 2 si se encontró el mismo telefono
   var MongoClient = require('mongodb').MongoClient;
   //DbConnection
   //mongodb://localhost:27017
@@ -199,15 +209,17 @@ function UpdateLocation(data){ //Parametros de entrada
           try {
           db.collection('DriverLoc', function (err, collection) { //Insert
               collection.updateOne(
-                  {cellphone: data.cel},
+                  {FBID: data.key},
                   {$set: {latitude: data.lat,longitude: data.lon}}
-              )                   
+              )               
+             
           });
       } catch (e) {
+          return 0;
           console.log(e);
        }
                 
-                  
+       return 1;    
   }});
   
 }
@@ -230,7 +242,7 @@ function GetLocation(id){
           console.log("Connected to db"); 
           //StartQuerys
           try {
-              dbo.collection("DriverLoc").findOne({FBID: id}, function(err, result) {
+              db.collection("DriverLoc").findOne({FBID: id}, function(err, result) {
                   if (err) throw err;
                   return result;
                   db.close();
@@ -244,15 +256,18 @@ function GetLocation(id){
 }
 
 function GetPeople(id){
+    //-1 si hay error
+    //1 si se encuentra
+    // 0 si no se encontró
       var MongoClient = require('mongodb').MongoClient;
-      console.log('Intentando actualizar ')
+      console.log('Intentando encontrar ')
       MongoClient.connect(ClusterCon, function (err, client) {
                           //Mongodb Cluster URL
           if(err)
           {
               console.log("Connection Failed :C")
               console.log(err);
-              return 0;
+              return -1;
           }
           else
           {
@@ -261,11 +276,16 @@ function GetPeople(id){
               console.log("Connected to db"); 
               //StartQuerys
               try {
-                  dbo.collection("People").findOne({FBID: id}, function(err, result) {
-                      if (err) throw err;
-                      return result;
-                      db.close();
-                    }); 
+                db.collection('Person', function (err, collection) { //Insert
+                    if(collection.find({FBID: id}) == null) {
+                        return 0;
+                      }
+                      else{
+
+                        return 1;
+                      }
+                });
+                
           } catch (e) {
               console.log(e);
            }
@@ -292,7 +312,7 @@ function GetRoute(id){
           console.log("Connected to db"); 
           //StartQuerys
           try {
-              dbo.collection("Routes").findOne({routeID: id}, function(err, result) {
+              db.collection("Routes").findOne({routeID: id}, function(err, result) {
                   if (err) throw err;
                   return result;
                   db.close();
