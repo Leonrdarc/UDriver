@@ -5,19 +5,25 @@ import Geolocation from 'react-native-geolocation-service';
 import io from 'socket.io-client';
 import SearchableDropdown from 'react-native-searchable-dropdown';
 import {NavigationEvents} from 'react-navigation';
+import { Avatar, Rating, Button } from 'react-native-elements';
 
 import Search from '../Search';
 import Directions from '../Directions';
 import MenuButton from '../MenuButton';
 
 import taxi from '../../assets/taxi.png';
-import originMark from '../../assets/location-pin.png'
-import flagMark from '../../assets/flag.png'
+import originMark from '../../assets/location-pin.png';
+import flagMark from '../../assets/flag.png';
+import avatar from'../../assets/avatar1.jpeg';
+import avatar1 from'../../assets/avatar3.jpg';
+import starCustom from'../../assets/star.png';
+          
 
 
 const screen = Dimensions.get('window');
 const API_URL = 'http://192.168.1.72:3000'
 const ASPECT_RATIO = screen.width / screen.height;
+const WIDTH= screen.width;
 const LATITUDE = 37.414978;
 const LONGITUDE = -122.058499;
 const LATITUDE_DELTA = 0.0922;
@@ -35,6 +41,7 @@ export default class Map extends Component{
     super(props);
     this.state = {
       region: null,
+      regionsel:null,
       origin:null,
       destination: null,
       messages: [],
@@ -48,10 +55,13 @@ export default class Map extends Component{
       markers: [
 
       ],
-      routeDrivers:[
+      allmarkers: [
 
       ],
+      settingroute:null,
       routeSelected: null,
+      selectedRoute: null,
+      
     };
 
     this.updateDriver = this.updateDriver.bind(this);
@@ -60,27 +70,30 @@ export default class Map extends Component{
   }
 
   updateDriver(location){
-    alert(this.state.routeSelected)
-    let index = this.state.markers.findIndex(x => x.key === location.key);
-    if(!this.state.routeSelected){
-      if(index===-1){
-      this.setState({
-        markers: [
-          ...this.state.markers,
-          ...this.generateMarkers(location),
-        ],
-      })
+    if(!this.state.settingRoute){
+      let index = this.state.markers.findIndex(x => x.key === location.key);
+      if(!this.state.routeSelected){
+        if(index===-1){
+          this.setState({
+            markers: [
+              ...this.state.markers,
+              ...this.generateMarkers(location),
+            ],
+          })
+          this.setState({
+            allmarkers: [
+              ...this.state.markers,
+            ]
+          })
+        }
         this._animateMarker(location);
-    }else{
-      marker =this.state.markers
-      C = marker.filter(function(val) {
-        // return this.state.routeDrivers.indexOf(val.key) != -1;
-       });
-      this.setState({markers: C})
-      this._animateMarker(location);
+      
+      }else if(index!=-1){
+        this._animateMarker(location);
       }
-    }
-  } 
+    } 
+  }
+    
 
   generateMarkers(fromCoordinate) {
     const result = [];
@@ -135,6 +148,26 @@ export default class Map extends Component{
       }
   }
 
+  async userSet(){
+    await Geolocation.getCurrentPosition(
+      ({coords: { latitude, longitude}}) => {
+          this.setState({ region:{ 
+            latitude,
+            longitude,
+            latitudeDelta:0.0143,
+            longitudeDelta:0.0134
+          } 
+        });
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 1000 }
+    );
+  }
+
+  cancelRoute(){
+    this.setState({destination: null, routeSelected: null, selectedRoute: null})
+    this.userSet()
+  }
   componentWillUnmount(){
     this.socket.close();
   }
@@ -164,6 +197,7 @@ export default class Map extends Component{
   };
 
   async handleSelectedRoute(item){
+    this.setState({settingRoute:true});
     const {id}= item;
     if(id===1){
       this.setState({
@@ -175,7 +209,7 @@ export default class Map extends Component{
           latitude:10.923450, 
           longitude:-74.799546
         },
-        routeSelected: true,
+        selectedRoute: id,
       });
     }else{
       this.setState({
@@ -187,20 +221,36 @@ export default class Map extends Component{
           latitude:11.003087, 
           longitude:-74.834960
         },
-        routeSelected: true,
+        selectedRoute: id,
       });
-    }
-    this.socket.emit('GetRouteDrivers', id)
+    };
+    this.socket.emit('GetRouteDrivers', id);
     await this.socket.on('RouteDrivers', (drivers)=>{
-      
-      C = this.state.markers.filter(function(val) {
+      C = this.state.allmarkers.filter(function(val) {
         return drivers.indexOf(val.key) != -1;
       });
       this.setState({
-        routeDrivers: drivers
+        markers: [
+          ...C,
+        ],
+        
+        routeSelected: true,
+        
       })
-    })
-    
+    });
+    this.setState({settingRoute:false});
+  }
+
+  setRoute(result){
+    this.setState({region:null})
+    this.mapView.fitToCoordinates(result.coordinates,{
+      edgePadding:{
+        right: 25,
+        left: 25,
+        top:25,
+        bottom: 25,
+      }
+    });
   }
 
   refsCollection = {};
@@ -230,7 +280,7 @@ export default class Map extends Component{
             }}
             navigation={this.props.navigation}/>
       <MapView
-        initialRegion={this.state.region}
+        region={this.state.region}
         showsCompass={true}
         rotateEnabled={false}
         style={styles.map}
@@ -244,16 +294,7 @@ export default class Map extends Component{
           <Directions 
             origin={origin}
             destination={destination}
-            onReady={result =>{
-              this.mapView.fitToCoordinates(result.coordinates,{
-                edgePadding:{
-                  right: 25,
-                  left: 25,
-                  top:25,
-                  bottom: 25,
-                }
-              });
-            }}
+            onReady={result =>this.setRoute(result)}
           />
           
         )
@@ -279,6 +320,7 @@ export default class Map extends Component{
               style={{height:40, width:80, resizeMode:'contain'}}/>
             </Marker.Animated>
         ))}
+        
 
       </MapView>
       {/* < Search onLocationSelected={this.handleLocationSelected}/> */}
@@ -347,6 +389,98 @@ export default class Map extends Component{
           underlineColorAndroid="transparent"
           //To remove the underline from the android input
         />
+        {this.state.selectedRoute===1 &&(
+          <View style={{
+            width: WIDTH-60, 
+            height: 250, 
+            backgroundColor: '#2EABB2', 
+            justifyContent: 'flex-start', 
+            alignItems: 'center',
+            position: 'absolute',
+            bottom: 0,
+            marginLeft:30,
+            marginBottom:10,
+            borderRadius:20
+          }}
+          > 
+            <Text style={{fontSize:20, fontWeight:'bold', color:'white', marginTop:10}}>
+              Conductor elegido
+            </Text>
+            <Avatar
+              rounded
+              containerStyle={{marginTop:10}}
+              source={avatar1}
+              size={60}
+            />
+            <Rating
+              type='custom'
+              startingValue={3.7}
+              readonly 
+              ratingBackgroundColor='transparent' 
+              style={{backgroundColor: 'transparent'}}
+              ratingImage={starCustom}
+              imageSize={13}
+              style={{paddingTop:5, alignItems: 'flex-start',}}
+            />
+            <Text style={{fontSize:12, color:'white'}}>(3.7)</Text>
+            <Text style={{fontSize:16, color:'white', marginTop:10, marginBottom:15}}>
+              Miguel Jimeno Paba
+            </Text>
+            <Button
+              title="Cancelar"
+              onPress={()=>this.cancelRoute()}
+              type="solid"
+              titleStyle={{color:'#2EABB2'}}
+              buttonStyle={{backgroundColor:'#FFFFFF', borderRadius: 30, width: 300, marginBottom:30}}
+            />
+          </View>
+        )}
+        {this.state.selectedRoute===2 &&(
+          <View style={{
+            width: WIDTH-60, 
+            height: 250, 
+            backgroundColor: '#2EABB2', 
+            justifyContent: 'flex-start', 
+            alignItems: 'center',
+            position: 'absolute',
+            bottom: 0,
+            marginLeft:30,
+            marginBottom:10,
+            borderRadius:20
+          }}
+          > 
+            <Text style={{fontSize:20, fontWeight:'bold', color:'white', marginTop:10}}>
+              Conductor elegido
+            </Text>
+            <Avatar
+              rounded
+              containerStyle={{marginTop:10}}
+              source={avatar}
+              size={60}
+            />
+            <Rating
+              type='custom'
+              startingValue={4.5}
+              readonly 
+              ratingBackgroundColor='transparent' 
+              style={{backgroundColor: 'transparent'}}
+              ratingImage={starCustom}
+              imageSize={13}
+              style={{paddingTop:5, alignItems: 'flex-start',}}
+            />
+            <Text style={{fontSize:12, color:'white'}}>(4.5)</Text>
+            <Text style={{fontSize:16, color:'white', marginTop:10, marginBottom:15}}>
+              Martin Molinares Araujo
+            </Text>
+            <Button
+              title="Cancelar"
+              onPress={()=>this.cancelRoute()}
+              type="solid"
+              titleStyle={{color:'#2EABB2'}}
+              buttonStyle={{backgroundColor:'#FFFFFF', borderRadius: 30, width: 300, marginBottom:30}}
+            />
+          </View>
+        )}
     </View>
     );
   }

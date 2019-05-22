@@ -11,7 +11,7 @@ export default class rideScreen extends Component {
   render() {
     return (
       <View>
-        <Text> RideScreen </Text>
+        <Text style={{fontSize:20, fontWeight:'bold', padding:20}}> Aún no tiene viajes registrados </Text>
       </View>
     );
   }

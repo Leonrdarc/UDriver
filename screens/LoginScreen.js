@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import { createStackNavigator, createAppContainer } from 'react-navigation';
-import { View, Text, ImageBackground, StyleSheet, Image, TextInput, TouchableOpacity, Animated, Dimensions, Keyboard, AsyncStorage } from 'react-native';
+import { View, Text, ImageBackground, StyleSheet, Image, TextInput, TouchableOpacity, Animated, Dimensions, ToastAndroid, AsyncStorage } from 'react-native';
 import { placeholder } from '@babel/types';
 import * as Animatable from 'react-native-animatable';
 import AccountKit from 'react-native-facebook-account-kit'
@@ -49,6 +49,7 @@ export default class LoginScreen extends Component {
       await AsyncStorage.setItem('JWT', JSON.stringify(this.state.jwt));
       this._goMapsAsync();
     } catch (err) {
+      ToastAndroid.show('Por favor intente nuevamente!', ToastAndroid.SHORT);
       this.setState({loading: false})
     }
   }
@@ -65,15 +66,12 @@ export default class LoginScreen extends Component {
       })
 
       if (!res.ok) {
-        alert
-        alert('No se pudo obtener el JWT')
-        return
+        throw err;
       }
 
       const { jwt } = await res.json()
       this.setState({jwt: jwt})
     }catch(err){
-      alert('No se ha podido autenticar')
       throw err;
     }
   }
@@ -159,10 +157,14 @@ export default class LoginScreen extends Component {
           fullScreen
           overlayStyle={{alignItems: 'center', justifyContent:'center'}}
           containerStyle={{ alignItems:'center',justifyContent:'center', opacity:1}}
-          overlayBackgroundColor="rgba(255,255,255,0.4)"
-        >
-          <Text style={{fontSize:20}}>Cargando...</Text>
-          
+          overlayBackgroundColor="rgba(255,255,255,0.8)"
+        > 
+          <View>
+          <Image source={require('../assets/loading.gif')} style={{height: 50, width: 50, resizeMode: 'contain'}}></Image>
+          <Text style={{ fontSize:12, marginTop:10}}>
+                  Cargando...
+          </Text>
+          </View>
         </Overlay>
       </View>
     );
