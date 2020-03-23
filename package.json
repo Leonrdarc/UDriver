@@ -16,7 +16,7 @@
     "jsonwebtoken": "^8.5.1",
     "messagebird": "^2.4.1",
     "mongodb": "^3.2.4",
-    "mongoose": "^5.5.7",
+    "mongoose": "^5.7.5",
     "native-base": "^2.12.1",
     "nexmo": "^2.4.1",
     "node-fetch": "^2.6.0",
